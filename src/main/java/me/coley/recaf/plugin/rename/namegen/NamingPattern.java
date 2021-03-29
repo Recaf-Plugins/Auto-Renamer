@@ -1,5 +1,6 @@
 package me.coley.recaf.plugin.rename.namegen;
 
+import me.coley.recaf.control.Controller;
 import me.coley.recaf.util.StringUtil;
 
 /**
@@ -26,14 +27,18 @@ public enum NamingPattern {
 		}
 	}
 
-	public NameStrategy createStrategy() {
+	/**
+	 * @param controller The controller to pull classes from.
+	 * @return A naming strategy to create appropriate names for items.
+	 */
+	public NameStrategy createStrategy(Controller controller) {
 		switch (this) {
 			case INTELLIGENT:
 				return new IntelligentStrategy();
 			case SOURCE_FILE:
 				return new SourceFileStrategy();
 			case SIMPLE:
-				return new SimpleStrategy();
+				return new SimpleStrategy(controller);
 			default:
 				throw new UnsupportedOperationException("Unsupported naming pattern: " + name());
 		}

@@ -34,6 +34,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	private static final String NAME_PATTERN = "Naming pattern";
 	private static final String NAME_SCOPE = "Naming scope";
 	private static final String SHORT_CUTOFF = "Short name cutoff";
+	private static final String PRUNE_DEBUG = "Remove debug info";
 	private Controller controller;
 
 	@Conf(value = NAME_PATTERN, noTranslate = true)
@@ -47,6 +48,9 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 
 	@Conf(value = KEEP_P_STRUCT, noTranslate = true)
 	public boolean keepPackageLayout = true;
+
+	@Conf(value = PRUNE_DEBUG, noTranslate = true)
+	public boolean pruneDebugInfo;
 
 	@Override
 	public String getVersion() {

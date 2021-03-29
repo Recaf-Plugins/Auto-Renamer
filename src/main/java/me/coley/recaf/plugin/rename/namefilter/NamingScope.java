@@ -27,6 +27,10 @@ public enum NamingScope {
 		}
 	}
 
+	/**
+	 * @param plugin Plugin instance with config values to pull from
+	 * @return A filter instance to match the current scope type.
+	 */
 	public ScopeFilter createFilter(AutoRename plugin) {
 		switch(this) {
 			case ALL:

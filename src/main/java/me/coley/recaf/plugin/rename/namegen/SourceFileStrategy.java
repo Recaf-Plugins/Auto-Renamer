@@ -5,6 +5,11 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
+/**
+ * A naming strategy that matches classes to the value of their {@code SourceFile} attribute.
+ *
+ * @author Matt Coley
+ */
 public class SourceFileStrategy implements NameStrategy {
 	@Override
 	public String className(ClassNode node) {

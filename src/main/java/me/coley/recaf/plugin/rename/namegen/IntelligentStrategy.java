@@ -5,6 +5,11 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
+/**
+ * A naming strategy that yields an intelligent pattern of renaming classes and their members.
+ *
+ * @author Matt Coley
+ */
 public class IntelligentStrategy implements NameStrategy {
 	@Override
 	public String className(ClassNode node) {

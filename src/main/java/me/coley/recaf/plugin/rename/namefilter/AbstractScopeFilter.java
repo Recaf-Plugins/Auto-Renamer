@@ -3,6 +3,11 @@ package me.coley.recaf.plugin.rename.namefilter;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Common base for filters with result caching to prevent unnecessary duplicate checks.
+ *
+ * @author Matt Coley
+ */
 public abstract class AbstractScopeFilter implements ScopeFilter {
 	private final Set<String> visitedMatches = new HashSet<>();
 	private final Set<String> visitedNonMatches = new HashSet<>();

@@ -1,5 +1,6 @@
 package me.coley.recaf.plugin.rename;
 
+import me.coley.recaf.control.Controller;
 import me.coley.recaf.plugin.rename.namefilter.NamingScope;
 import me.coley.recaf.plugin.rename.namefilter.ScopeFilter;
 import me.coley.recaf.plugin.rename.namegen.NameStrategy;
@@ -21,14 +22,16 @@ public class NameGenerator {
 	private final String packageOverride;
 
 	/**
+	 * @param controller
+	 * 		Controller to pull classes from.
 	 * @param plugin
 	 * 		Plugin instance with config to pull.
 	 * @param packageOverride
 	 * 		Package name to put classes into. Must be {@code null} to keep existing package structures.
 	 */
-	public NameGenerator(AutoRename plugin, String packageOverride) {
+	public NameGenerator(Controller controller, AutoRename plugin, String packageOverride) {
 		this.scopeFilter = plugin.namingScope.createFilter(plugin);
-		this.namingStrategy = plugin.namingPattern.createStrategy();
+		this.namingStrategy = plugin.namingPattern.createStrategy(controller);
 		this.packageOverride = packageOverride;
 	}
 

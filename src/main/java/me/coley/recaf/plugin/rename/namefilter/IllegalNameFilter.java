@@ -4,6 +4,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Name filter where items that are named illegally <i>(reserved keywords, whitespace, etc)</i> fit the filter.
+ *
+ * @author Matt Coley
+ */
 public class IllegalNameFilter extends AbstractScopeFilter {
 	private static final Set<String> KEYWORDS = new HashSet<>(
 			Arrays.asList("_", "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class",
