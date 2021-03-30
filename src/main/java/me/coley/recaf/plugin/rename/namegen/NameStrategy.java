@@ -12,6 +12,13 @@ import org.objectweb.asm.tree.MethodNode;
  */
 public interface NameStrategy {
 	/**
+	 * @return {@code true} when the implementation is safe to be executed with multiple threads.
+	 */
+	default boolean allowMultiThread() {
+		return true;
+	}
+
+	/**
 	 * @param node
 	 * 		Class to create a name for.
 	 *

@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,7 +26,7 @@ import java.util.concurrent.Executors;
  */
 public class Processor {
 	private final Map<String, String> mappings = new ConcurrentHashMap<>();
-	private final ExecutorService service = Executors.newFixedThreadPool(getThreadCount());
+	private final ExecutorService service;
 	private final Controller controller;
 	private final AutoRename plugin;
 	private final NameGenerator generator;
@@ -42,6 +43,12 @@ public class Processor {
 		// Configure name generator
 		String packageName = plugin.keepPackageLayout ? null : AutoRename.FLAT_PACKAGE_NAME;
 		generator = new NameGenerator(controller, plugin, packageName);
+		// configure thread pool
+		if (generator.allowMultiThread()) {
+			service = Executors.newFixedThreadPool(getThreadCount());
+		} else {
+			service = Executors.newSingleThreadExecutor();
+		}
 	}
 
 	/**

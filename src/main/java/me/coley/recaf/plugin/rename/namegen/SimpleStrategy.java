@@ -11,14 +11,21 @@ import org.objectweb.asm.tree.MethodNode;
  *
  * @author Matt Coley
  */
-public class SimpleStrategy implements NameStrategy {
-	private final Controller controller;
+public class SimpleStrategy extends AbstractNameStrategy {
 	private int classIndex = 1;
 	private int fieldIndex = 1;
 	private int methodIndex = 1;
 
 	public SimpleStrategy(Controller controller) {
-		this.controller = controller;
+		super(controller);
+	}
+
+	@Override
+	public boolean allowMultiThread() {
+		// Because we are incrementing fields/methods in order we cannot have
+		// two classes incrementing the same index.
+		// This would cause both classes to appear to skip indices.
+		return false;
 	}
 
 	@Override
@@ -33,7 +40,16 @@ public class SimpleStrategy implements NameStrategy {
 
 	@Override
 	public String methodName(ClassNode owner, MethodNode method) {
-		// TODO: Pass in controller context and ensure methods in a hierarchy don't get fucked up.
+		// Do not rename methods that belong/inherit from library classes
+		if (isLibrary(owner, method)) {
+			return null;
+		}
+		// Yield the name used by the rest of the method hierarchy
+		String parentMapped = getParentMethodMappedName(owner, method);
+		if (parentMapped != null) {
+			return parentMapped;
+		}
+		// Create a new name
 		return "method" + (methodIndex++);
 	}
 

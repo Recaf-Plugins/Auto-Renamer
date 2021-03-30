@@ -36,6 +36,13 @@ public class NameGenerator {
 	}
 
 	/**
+	 * @return {@code true} when the name generation implementation is safe to be executed with multiple threads.
+	 */
+	public boolean allowMultiThread() {
+		return namingStrategy.allowMultiThread();
+	}
+
+	/**
 	 * @param node
 	 * 		Class to rename.
 	 *
