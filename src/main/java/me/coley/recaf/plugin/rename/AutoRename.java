@@ -31,7 +31,9 @@ import java.util.stream.Collectors;
  */
 @Plugin(name = "Auto Renamer")
 public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, ConfigurablePlugin {
+	// Consts
 	public static final String FLAT_PACKAGE_NAME = "renamed/";
+	// Config keys
 	private static final String KEEP_P_STRUCT = "Keep package layout";
 	private static final String NAME_PATTERN = "Naming pattern";
 	private static final String NAME_SCOPE = "Naming scope";
@@ -53,6 +55,9 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 
 	@Conf(value = PRUNE_DEBUG, noTranslate = true)
 	public boolean pruneDebugInfo;
+
+	// TODO: Should this be a modifiable conf value, or just a reasonable const?
+	public int phaseTimeout = 10;
 
 	@Override
 	public String getVersion() {
