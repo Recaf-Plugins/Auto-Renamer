@@ -9,7 +9,8 @@ public class ShortNameFilter implements ScopeFilter {
 	private final int length;
 
 	/**
-	 * @param length Maximum length for what to consider as a short name.
+	 * @param length
+	 * 		Maximum length for what to consider as a short name.
 	 */
 	public ShortNameFilter(int length) {
 		this.length = length;

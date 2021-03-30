@@ -28,7 +28,9 @@ public enum NamingPattern {
 	}
 
 	/**
-	 * @param controller The controller to pull classes from.
+	 * @param controller
+	 * 		The controller to pull classes from.
+	 *
 	 * @return A naming strategy to create appropriate names for items.
 	 */
 	public NameStrategy createStrategy(Controller controller) {

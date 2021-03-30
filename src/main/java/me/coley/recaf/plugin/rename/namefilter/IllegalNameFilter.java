@@ -21,7 +21,7 @@ public class IllegalNameFilter extends AbstractScopeFilter {
 	/**
 	 * See: https://www.compart.com/en/unicode/category
 	 */
-	private static final int[] ALLOWED_TYPES = new int[] {
+	private static final int[] ALLOWED_TYPES = new int[]{
 			Character.UPPERCASE_LETTER,
 			Character.LOWERCASE_LETTER,
 			Character.OTHER_LETTER,

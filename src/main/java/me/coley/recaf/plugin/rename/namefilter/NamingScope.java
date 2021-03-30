@@ -15,7 +15,7 @@ public enum NamingScope {
 
 	@Override
 	public String toString() {
-		switch(this) {
+		switch (this) {
 			case ALL:
 				return "All names";
 			case SHORT_NAMES:
@@ -28,11 +28,13 @@ public enum NamingScope {
 	}
 
 	/**
-	 * @param plugin Plugin instance with config values to pull from
+	 * @param plugin
+	 * 		Plugin instance with config values to pull from
+	 *
 	 * @return A filter instance to match the current scope type.
 	 */
 	public ScopeFilter createFilter(AutoRename plugin) {
-		switch(this) {
+		switch (this) {
 			case ALL:
 				return name -> true;
 			case SHORT_NAMES:

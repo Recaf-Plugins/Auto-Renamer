@@ -12,28 +12,39 @@ import org.objectweb.asm.tree.MethodNode;
  */
 public interface NameStrategy {
 	/**
-	 * @param node Class to create a name for.
+	 * @param node
+	 * 		Class to create a name for.
+	 *
 	 * @return Name for the class.
 	 */
 	String className(ClassNode node);
 
 	/**
-	 * @param owner Class that defines the field.
-	 * @param field Field to create a name for.
+	 * @param owner
+	 * 		Class that defines the field.
+	 * @param field
+	 * 		Field to create a name for.
+	 *
 	 * @return Name for the field.
 	 */
 	String fieldName(ClassNode owner, FieldNode field);
 
 	/**
-	 * @param owner Class that defines the field.
-	 * @param method Method to create a name for.
+	 * @param owner
+	 * 		Class that defines the field.
+	 * @param method
+	 * 		Method to create a name for.
+	 *
 	 * @return Name for the method.
 	 */
 	String methodName(ClassNode owner, MethodNode method);
 
 	/**
-	 * @param method Method that defines the variable.
-	 * @param local Variable to create a name for.
+	 * @param method
+	 * 		Method that defines the variable.
+	 * @param local
+	 * 		Variable to create a name for.
+	 *
 	 * @return Name for the variable.
 	 */
 	String variable(MethodNode method, LocalVariableNode local);

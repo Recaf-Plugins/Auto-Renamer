@@ -31,8 +31,10 @@ public class Processor {
 	private final NameGenerator generator;
 
 	/**
-	 * @param controller Controller with workspace to pull classes from.
-	 * @param plugin Plugin with config values.
+	 * @param controller
+	 * 		Controller with workspace to pull classes from.
+	 * @param plugin
+	 * 		Plugin with config values.
 	 */
 	public Processor(Controller controller, AutoRename plugin) {
 		this.controller = controller;
@@ -45,7 +47,8 @@ public class Processor {
 	/**
 	 * Analyze the given classes and create new names for them and their members.
 	 *
-	 * @param matchedNames Set of class names to analyze.
+	 * @param matchedNames
+	 * 		Set of class names to analyze.
 	 */
 	public void analyze(Set<String> matchedNames) {
 		// Reset mappings

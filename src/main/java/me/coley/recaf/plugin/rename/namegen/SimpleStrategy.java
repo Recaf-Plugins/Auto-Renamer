@@ -15,7 +15,7 @@ public class SimpleStrategy implements NameStrategy {
 	private final Controller controller;
 	private int classIndex = 1;
 	private int fieldIndex = 1;
-	private int methodIndex= 1;
+	private int methodIndex = 1;
 
 	public SimpleStrategy(Controller controller) {
 		this.controller = controller;

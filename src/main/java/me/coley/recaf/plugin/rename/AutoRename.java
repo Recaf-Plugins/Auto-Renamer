@@ -6,6 +6,9 @@ import me.coley.recaf.config.Conf;
 import me.coley.recaf.config.FieldWrapper;
 import me.coley.recaf.control.Controller;
 import me.coley.recaf.control.gui.GuiController;
+import me.coley.recaf.plugin.api.ConfigurablePlugin;
+import me.coley.recaf.plugin.api.ContextMenuInjectorPlugin;
+import me.coley.recaf.plugin.api.StartupPlugin;
 import me.coley.recaf.plugin.rename.namefilter.NamingScope;
 import me.coley.recaf.plugin.rename.namegen.NamingPattern;
 import me.coley.recaf.ui.ContextBuilder;
@@ -13,7 +16,6 @@ import me.coley.recaf.ui.controls.ActionMenuItem;
 import me.coley.recaf.ui.controls.NumberSlider;
 import me.coley.recaf.workspace.JavaResource;
 import org.plugface.core.annotations.Plugin;
-import me.coley.recaf.plugin.api.*;
 
 import java.util.Map;
 import java.util.Set;
