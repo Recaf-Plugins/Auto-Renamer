@@ -3,10 +3,13 @@ package me.coley.recaf.plugin.rename.namegen;
 import me.coley.recaf.control.Controller;
 import me.coley.recaf.graph.inheritance.HierarchyGraph;
 import me.coley.recaf.util.ClassUtil;
+import me.coley.recaf.util.Log;
+import me.coley.recaf.workspace.Workspace;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,7 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractNameStrategy implements NameStrategy {
 	private final Map<String, Boolean> isLibraryMethodCache = new ConcurrentHashMap<>();
+	private final Map<String, Boolean> definesMethodCache = new ConcurrentHashMap<>();
+	private final Map<String, String> classNameCache = new ConcurrentHashMap<>();
 	private final Map<String, String> methodNameCache = new ConcurrentHashMap<>();
+	private final Set<String> warnedDupeNames = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private final Controller controller;
 	private final HierarchyGraph graph;
 
@@ -27,10 +33,27 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 		graph = controller.getWorkspace().getHierarchyGraph();
 	}
 
+	/**
+	 * Record method mapping.
+	 *
+	 * @param methodKey
+	 * 		Key.
+	 * @param mapped
+	 * 		Value.
+	 */
 	protected void putMethodMapping(String methodKey, String mapped) {
 		methodNameCache.put(methodKey, mapped);
 	}
 
+	/**
+	 * @param owner
+	 * 		Class with hierarchy to check.
+	 * @param method
+	 * 		Method definition.
+	 *
+	 * @return {@code null} when no parent class has a mapping for the method.
+	 * Otherwise result is the reserved mapping.
+	 */
 	protected String getParentMethodMappedName(ClassNode owner, MethodNode method) {
 		Set<String> owners = graph.getHierarchyNames(owner.name);
 		for (String className : owners) {
@@ -38,10 +61,9 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 			if (className.equals(owner.name))
 				continue;
 			// Check if the class in the hierarchy contains the method
-			ClassReader reader = controller.getWorkspace().getClassReader(className);
-			if (ClassUtil.containsMethod(reader, method.name, method.desc)) {
+			if (classDefinesMethod(className, method)) {
 				// Check if we have already mapped the method
-				String methodKey = methodKey(reader.getClassName(), method.name, method.desc);
+				String methodKey = methodKey(className, method.name, method.desc);
 				String mappedName = methodNameCache.get(methodKey);
 				if (mappedName != null)
 					return mappedName;
@@ -51,6 +73,35 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 		return null;
 	}
 
+	/***
+	 * Check if a class defines the given method.
+	 * @param className Name of class to check.
+	 * @param method Method definition to check.
+	 * @return {@code true} when it does. {@code false} otherwise.
+	 */
+	protected boolean classDefinesMethod(String className, MethodNode method) {
+		String methodKey = methodKey(className, method.name, method.desc);
+		// Check if we've already computed if the method has been defined in the class orn ot.
+		// Need to use boxed type for nullability.
+		Boolean cached = definesMethodCache.get(methodKey);
+		if (cached == null) {
+			ClassReader reader = controller.getWorkspace().getClassReader(className);
+			cached = ClassUtil.containsMethod(reader, method.name, method.desc);
+			definesMethodCache.put(methodKey, cached);
+		}
+		return cached;
+	}
+
+	/**
+	 * Check if the method is an override of a library method.
+	 *
+	 * @param owner
+	 * 		Class defining method.
+	 * @param method
+	 * 		Method definition.
+	 *
+	 * @return {@code true} if the method is a library method.
+	 */
 	protected boolean isLibrary(ClassNode owner, MethodNode method) {
 		String methodKey = methodKey(owner, method);
 		// Check if we've already computed if the method is a library one or not.
@@ -63,10 +114,116 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 		return cached;
 	}
 
+	/**
+	 * Get a parent name from the class if any parents exist.
+	 *
+	 * @param node
+	 * 		Class to look at parents of.
+	 *
+	 * @return Name of the class's parent or {@code null} if no parent type.
+	 */
+	protected String getParentName(ClassNode node) {
+		return NameUtils.getParentName(classNameCache, node);
+	}
+
+	/**
+	 * Get the simple version of a parent name from the class if any parents exist.
+	 *
+	 * @param node
+	 * 		Class to look at parents of.
+	 *
+	 * @return Simple name of the class's parent or {@code null} if no parent type.
+	 */
+	protected String getSimpleParentName(ClassNode node) {
+		return NameUtils.getSimpleParentName(classNameCache, node);
+	}
+
+	/**
+	 * Get the current mapping of the given class name.
+	 *
+	 * @param name
+	 * 		Class to map.
+	 *
+	 * @return Current mapped name, or itself if no mapping exists.
+	 */
+	protected String getCurrentName(String name) {
+		return classNameCache.getOrDefault(name, name);
+	}
+
+	/**
+	 * Check if a given name is a key for current mappings.
+	 *
+	 * @param name
+	 * 		Name to check.
+	 *
+	 * @return {@code true} when a mapping exists.
+	 */
+	protected boolean hasClassMapping(String name) {
+		return classNameCache.containsKey(name);
+	}
+
+	/**
+	 * Register the class mapping and ensure it isn't a duplicate entry.
+	 *
+	 * @param key
+	 * 		Original class name.
+	 * @param name
+	 * 		New class name.
+	 *
+	 * @return Unique de-duplicated new class name.
+	 */
+	protected String addClassMapping(String key, String name) {
+		// Prevent duplicates
+		int counter = 1;
+		String uniqueName = name;
+		boolean dupe = false;
+		while (classNameCache.containsValue(uniqueName)) {
+			uniqueName = name + (counter++);
+			dupe = true;
+		}
+		classNameCache.put(key, uniqueName);
+		// Warn about dupes
+		if (dupe && !warnedDupeNames.contains(name)) {
+			Log.warn("Automatically mapped class '{}' -> '{}' " +
+					"but the generated name already used! Using '{}'", key, name, uniqueName);
+			warnedDupeNames.add(name);
+		}
+		return uniqueName;
+	}
+
+	/**
+	 * @return The workspace to pull class info from.
+	 */
+	protected Workspace getWorkspace() {
+		return controller.getWorkspace();
+	}
+
+	/**
+	 * Map a class + method pair definition to a pattern to use for lookups.
+	 *
+	 * @param owner
+	 * 		Class.
+	 * @param method
+	 * 		Method.
+	 *
+	 * @return Key for lookups.
+	 */
 	private static String methodKey(ClassNode owner, MethodNode method) {
 		return methodKey(owner.name, method.name, method.desc);
 	}
 
+	/**
+	 * Map a class + method pair definition to a pattern to use for lookups.
+	 *
+	 * @param owner
+	 * 		Class name.
+	 * @param name
+	 * 		Method name.
+	 * @param desc
+	 * 		Method type.
+	 *
+	 * @return Key for lookups.
+	 */
 	private static String methodKey(String owner, String name, String desc) {
 		return owner + "." + name + desc;
 	}

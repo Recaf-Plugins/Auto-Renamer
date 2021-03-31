@@ -36,9 +36,9 @@ public enum NamingPattern {
 	public NameStrategy createStrategy(Controller controller) {
 		switch (this) {
 			case INTELLIGENT:
-				return new IntelligentStrategy();
+				return new IntelligentStrategy(controller);
 			case SOURCE_FILE:
-				return new SourceFileStrategy();
+				return new SourceFileStrategy(controller);
 			case SIMPLE:
 				return new SimpleStrategy(controller);
 			default:

@@ -38,7 +38,7 @@ public enum NamingScope {
 			case ALL:
 				return name -> true;
 			case SHORT_NAMES:
-				return new ShortNameFilter(plugin.cutoffNameLen);
+				return new ShortNameFilter((int) plugin.cutoffNameLen);
 			case ILLEGAL_NAMES:
 				return new IllegalNameFilter();
 			default:

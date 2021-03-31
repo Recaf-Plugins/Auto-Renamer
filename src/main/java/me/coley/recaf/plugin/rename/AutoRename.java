@@ -17,6 +17,7 @@ import me.coley.recaf.ui.controls.NumberSlider;
 import me.coley.recaf.workspace.JavaResource;
 import org.plugface.core.annotations.Plugin;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -48,7 +49,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	public NamingScope namingScope = NamingScope.ALL;
 
 	@Conf(value = SHORT_CUTOFF, noTranslate = true)
-	public int cutoffNameLen;
+	public long cutoffNameLen = 4;
 
 	@Conf(value = KEEP_P_STRUCT, noTranslate = true)
 	public boolean keepPackageLayout = true;
@@ -88,7 +89,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	@Override
 	public void forClass(ContextBuilder builder, ContextMenu menu, String name) {
 		menu.getItems().add(new ActionMenuItem("Auto rename class",
-				() -> rename(Pattern.quote(name), builder.getResource())));
+				() -> rename(Collections.singleton(name), builder.getResource())));
 	}
 
 	@Override
@@ -101,6 +102,10 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 		Set<String> matchedNames = resource.getClasses().keySet().stream()
 				.filter(name -> name.matches(namePattern))
 				.collect(Collectors.toSet());
+		rename(matchedNames, resource);
+	}
+
+	private void rename(Set<String> matchedNames, JavaResource resource) {
 		Processor processor = new Processor(controller, this);
 		processor.analyze(matchedNames);
 		processor.apply();

@@ -111,6 +111,10 @@ public class Processor {
 	 * @param node Class to rename.
 	 */
 	private void analyzeClass(ClassNode node) {
+		// Skip special cases: 'module-info'/'package-info'
+		if (node.name.matches("(?:[\\w\\/]+\\/)?(?:module|package)-info")) {
+			return;
+		}
 		// Class name
 		String oldClassName = node.name;
 		String newClassName = generator.createClassName(node);
@@ -145,6 +149,9 @@ public class Processor {
 		String oldClassName = node.name;
 		// Method names
 		for (MethodNode method : node.methods) {
+			// Skip constructor/static-block
+			if (method.name.charAt(0) == '<')
+				continue;
 			String oldMethodName = method.name;
 			String newMethodName = generator.createMethodName(node, method);
 			if (newMethodName != null) {
