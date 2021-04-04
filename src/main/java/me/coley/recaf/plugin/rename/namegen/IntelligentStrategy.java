@@ -1,8 +1,10 @@
 package me.coley.recaf.plugin.rename.namegen;
 
 import me.coley.recaf.control.Controller;
+import me.coley.recaf.plugin.rename.analysis.BayesDriver;
 import me.coley.recaf.util.AccessFlag;
 import me.coley.recaf.util.ClassUtil;
+import me.coley.recaf.util.Log;
 import me.coley.recaf.util.TypeUtil;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
@@ -15,8 +17,7 @@ import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
 
 /**
  * A naming strategy that yields an intelligent pattern of renaming classes and their members.
@@ -24,17 +25,23 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Matt Coley
  */
 public class IntelligentStrategy extends AbstractNameStrategy {
-	private final Map<String, String> fieldNameCache = new ConcurrentHashMap<>();
+	private final BayesDriver bayesDriver = new BayesDriver();
 
 	protected IntelligentStrategy(Controller controller) {
 		super(controller);
+		try {
+			bayesDriver.setup();
+			bayesDriver.populate(controller.getWorkspace());
+		} catch (IOException ex) {
+			Log.error(ex, "Failed to setup intelligent class backend");
+		}
 	}
 
 	@Override
 	public String className(ClassNode node) {
 		// Do lookup check first since some calls may populate cached items for parent types
 		if (hasClassMapping(node.name))
-			return getCurrentName(node.name);
+			return addClassMapping(node.name, getCurrentClassName(node.name));
 		// Check for parent name
 		String baseName = getParentName(node);
 		if (baseName == null) {
@@ -86,29 +93,41 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 		} else {
 			String internalName = matchCurrentMappings(type.getInternalName());
 			String simple = internalName.substring(internalName.lastIndexOf('/') + 1);
+			if (simple.contains("["))
+				simple = simple.replace("[", "Array");
 			name = "f" + NameUtils.capitalize(simple);
 		}
 		String key = fieldKey(owner.name, field.name, field.desc);
-		fieldNameCache.put(key, name);
-		return name;
+		return addFieldMapping(key, name);
 	}
 
 	@Override
 	public String methodName(ClassNode owner, MethodNode method) {
+		// Do not rename methods that belong/inherit from library classes
+		if (isLibrary(owner, method)) {
+			return null;
+		}
+		// Yield the name used by the rest of the method hierarchy
+		String parentMapped = getParentMethodMappedName(owner, method);
+		if (parentMapped != null) {
+			return parentMapped;
+		}
+		// Cant infer anything useful
 		if (AccessFlag.isAbstract(method.access)) {
 			return null;
 		}
+		String key = methodKey(owner.name, method.name, method.desc);
 		// Check getter
 		if (endsInGetter(owner, method)) {
 			FieldInsnNode field = getLastFieldInsn(method);
 			if (field != null)
-				return "get" + NameUtils.capitalize(getFieldName(owner, field));
+				return addMethodMapping(key, "get" + NameUtils.capitalize(getFieldName(owner, field)));
 		}
 		// Check setter
 		if (endsInSetter(owner, method)) {
 			FieldInsnNode field = getLastFieldInsn(method);
 			if (field != null)
-				return "set" + NameUtils.capitalize(getFieldName(owner, field));
+				return addMethodMapping(key, "set" + NameUtils.capitalize(getFieldName(owner, field)));
 		}
 		return null;
 	}
@@ -134,7 +153,7 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	 * @return Name for class based on usage.
 	 */
 	private String analyzePurpose(ClassNode node) {
-		return node.toString();
+		return bayesDriver.getClassToTag().getOrDefault(node.name, "Obj");
 	}
 
 	/**
@@ -153,7 +172,9 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	 * @return {@code true} when method matches pattern.
 	 */
 	private static boolean endsInGetter(ClassNode node, MethodNode method) {
-		AbstractInsnNode insn = method.instructions.getLast();
+		AbstractInsnNode insn = getReturnInsn(method);
+		if (insn == null)
+			return false;
 		boolean isStatic = AccessFlag.isStatic(method.access);
 		// Check last insn is a value return
 		int op = insn.getOpcode();
@@ -194,7 +215,9 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	 * @return {@code true} when method matches pattern.
 	 */
 	private static boolean endsInSetter(ClassNode node, MethodNode method) {
-		AbstractInsnNode insn = method.instructions.getLast();
+		AbstractInsnNode insn = getReturnInsn(method);
+		if (insn == null)
+			return false;
 		boolean isStatic = AccessFlag.isStatic(method.access);
 		// Check last insn is a method end (not returning any value)
 		int op = insn.getOpcode();
@@ -242,6 +265,24 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	}
 
 	/**
+	 * @param method
+	 * 		Method to search.
+	 *
+	 * @return Last {@code IRETURN-ARETURN} instruction in the method, ignoring flow control.
+	 */
+	private static AbstractInsnNode getReturnInsn(MethodNode method) {
+		if (method.instructions == null)
+			return null;
+		AbstractInsnNode insn = method.instructions.getLast();
+		do {
+			if (insn.getOpcode() >= Opcodes.IRETURN && insn.getOpcode() <= Opcodes.ARETURN)
+				return insn;
+			insn = insn.getPrevious();
+		} while (insn != null);
+		return null;
+	}
+
+	/**
 	 * @param owner
 	 * 		Class defining the field.
 	 * @param field
@@ -251,7 +292,7 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	 */
 	private String getFieldName(ClassNode owner, FieldInsnNode field) {
 		String key = fieldKey(owner.name, field.name, field.desc);
-		String mapped = fieldNameCache.get(key);
+		String mapped = getFieldMapping(key);
 		if (mapped != null) {
 			return mapped;
 		}
@@ -270,7 +311,7 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 			String currentMapping = null;
 			if (hasClassMapping(name)) {
 				// Map to existing mapping
-				currentMapping = getCurrentName(name);
+				currentMapping = getCurrentClassName(name);
 			} else if (getWorkspace().getPrimary().getClasses().containsKey(name)) {
 				// No mapping, see what we would map it to if its in the primary workspace
 				ClassNode baseClass = ClassUtil.getNode(getWorkspace().getClassReader(name), ClassReader.SKIP_CODE);
@@ -282,9 +323,5 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 			}
 		}
 		return name;
-	}
-
-	private static String fieldKey(String owner, String name, String desc) {
-		return owner + "." + name + " " + desc;
 	}
 }

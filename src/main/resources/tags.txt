@@ -1,0 +1,13 @@
+FileIO				JavaIO, JavaNIO, CommonsIO, Okio, Compression
+Networking			Web[HTTP/URL/TLS/Websocket/Webserver], Sockets[TCP/UDP], Mail
+Database			ObjectRelationMapping, Mysql, google-cloud-datastore
+BigData				AI, NeuralNetwork, NaturalLanguageProcessing, DeepLearning, DataCrunching
+Distributed			Akka, Kafka, Cloud[AWS/Azure], JavaRMI
+GUI					AWT, Swing, JavaFx, SWT, OpenGL[GLFW/LWJGL], LibGDX
+CLI					JCommander, CommonsCLI, Args4J, JOptSimple, PicoCLI
+Security 			Cryptography, Bitcoin, Captcha
+Android
+Bytecode 			ASM, BCEL, CGLib, JavaAssist, ByteBuddy
+NativeInterop		JNA, JNI, Keyhook
+Suspicious	 		Camera, RegistryLookup, WindowsRDP, Execution
+Misc

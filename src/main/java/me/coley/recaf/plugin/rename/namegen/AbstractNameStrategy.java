@@ -23,6 +23,7 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	private final Map<String, Boolean> isLibraryMethodCache = new ConcurrentHashMap<>();
 	private final Map<String, Boolean> definesMethodCache = new ConcurrentHashMap<>();
 	private final Map<String, String> classNameCache = new ConcurrentHashMap<>();
+	private final Map<String, String> fieldNameCache = new ConcurrentHashMap<>();
 	private final Map<String, String> methodNameCache = new ConcurrentHashMap<>();
 	private final Set<String> warnedDupeNames = Collections.newSetFromMap(new ConcurrentHashMap<>());
 	private final Controller controller;
@@ -31,18 +32,6 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	protected AbstractNameStrategy(Controller controller) {
 		this.controller = controller;
 		graph = controller.getWorkspace().getHierarchyGraph();
-	}
-
-	/**
-	 * Record method mapping.
-	 *
-	 * @param methodKey
-	 * 		Key.
-	 * @param mapped
-	 * 		Value.
-	 */
-	protected void putMethodMapping(String methodKey, String mapped) {
-		methodNameCache.put(methodKey, mapped);
 	}
 
 	/**
@@ -64,7 +53,7 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 			if (classDefinesMethod(className, method)) {
 				// Check if we have already mapped the method
 				String methodKey = methodKey(className, method.name, method.desc);
-				String mappedName = methodNameCache.get(methodKey);
+				String mappedName = getMethodMapping(methodKey);
 				if (mappedName != null)
 					return mappedName;
 			}
@@ -127,18 +116,6 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	}
 
 	/**
-	 * Get the simple version of a parent name from the class if any parents exist.
-	 *
-	 * @param node
-	 * 		Class to look at parents of.
-	 *
-	 * @return Simple name of the class's parent or {@code null} if no parent type.
-	 */
-	protected String getSimpleParentName(ClassNode node) {
-		return NameUtils.getSimpleParentName(classNameCache, node);
-	}
-
-	/**
 	 * Get the current mapping of the given class name.
 	 *
 	 * @param name
@@ -146,8 +123,28 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	 *
 	 * @return Current mapped name, or itself if no mapping exists.
 	 */
-	protected String getCurrentName(String name) {
+	protected String getCurrentClassName(String name) {
 		return classNameCache.getOrDefault(name, name);
+	}
+
+	/**
+	 * @param key
+	 * 		Field mapping key.
+	 *
+	 * @return Current mapped name.
+	 */
+	protected String getFieldMapping(String key) {
+		return fieldNameCache.get(key);
+	}
+
+	/**
+	 * @param key
+	 * 		Method mapping key.
+	 *
+	 * @return Current mapped name.
+	 */
+	protected String getMethodMapping(String key) {
+		return methodNameCache.get(key);
 	}
 
 	/**
@@ -192,10 +189,85 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	}
 
 	/**
+	 * Register the field mapping and ensure it isn't a duplicate entry.
+	 *
+	 * @param key
+	 * 		Field key value.
+	 * @param name
+	 * 		New field name.
+	 *
+	 * @return Unique de-duplicated new field name.
+	 */
+	protected String addFieldMapping(String key, String name) {
+		// Prevent duplicates
+		int counter = 1;
+		String uniqueName = name;
+		boolean dupe = false;
+		while (fieldNameCache.containsValue(uniqueName)) {
+			uniqueName = name + (counter++);
+			dupe = true;
+		}
+		fieldNameCache.put(key, uniqueName);
+		// Warn about dupes
+		if (dupe && !warnedDupeNames.contains(name)) {
+			Log.warn("Automatically mapped field '{}' -> '{}' " +
+					"but the generated name already used! Using '{}'", key, name, uniqueName);
+			warnedDupeNames.add(name);
+		}
+		return uniqueName;
+	}
+
+	/**
+	 * Register the method mapping and ensure it isn't a duplicate entry.
+	 *
+	 * @param key
+	 * 		Method key value.
+	 * @param name
+	 * 		New method name.
+	 *
+	 * @return Unique de-duplicated new method name.
+	 */
+	protected String addMethodMapping(String key, String name) {
+		// Prevent duplicates
+		int counter = 1;
+		String uniqueName = name;
+		boolean dupe = false;
+		while (methodNameCache.containsValue(uniqueName)) {
+			uniqueName = name + (counter++);
+			dupe = true;
+		}
+		methodNameCache.put(key, uniqueName);
+		// Warn about dupes
+		if (dupe && !warnedDupeNames.contains(name)) {
+			Log.warn("Automatically mapped method '{}' -> '{}' " +
+					"but the generated name already used! Using '{}'", key, name, uniqueName);
+			warnedDupeNames.add(name);
+		}
+		return uniqueName;
+	}
+
+	/**
 	 * @return The workspace to pull class info from.
 	 */
 	protected Workspace getWorkspace() {
 		return controller.getWorkspace();
+	}
+
+
+	/**
+	 * Map a class + field pair definition to a pattern to use for lookups.
+	 *
+	 * @param owner
+	 * 		Class.
+	 * @param name
+	 * 		Field name.
+	 * @param desc
+	 * 		Field type.
+	 *
+	 * @return Key for lookups.
+	 */
+	protected static String fieldKey(String owner, String name, String desc) {
+		return owner + "." + name + " " + desc;
 	}
 
 	/**
@@ -208,7 +280,7 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	 *
 	 * @return Key for lookups.
 	 */
-	private static String methodKey(ClassNode owner, MethodNode method) {
+	protected static String methodKey(ClassNode owner, MethodNode method) {
 		return methodKey(owner.name, method.name, method.desc);
 	}
 
@@ -224,7 +296,7 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 	 *
 	 * @return Key for lookups.
 	 */
-	private static String methodKey(String owner, String name, String desc) {
+	protected static String methodKey(String owner, String name, String desc) {
 		return owner + "." + name + desc;
 	}
 }

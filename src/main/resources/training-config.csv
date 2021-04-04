@@ -1,0 +1,76 @@
+# COLUMNS:
+#	Weight, Classification, Tag-Collection
+# SETUP:
+#	Naive bayes doesn't need "real" input examples
+#	As long as the ratios are correct, it will work.
+#	So in here we modify the values like a "config".
+300,FileIO,FileIO
+300,FileIO,FileIO:FileIO
+30,FileIO,FileIO:Distributed
+25,FileIO,FileIO:GUI
+#
+300,Networking,Networking
+300,Networking,Networking:Networking
+50,Networking,Networking:GUI
+25,Networking,Networking:FileIO
+#
+300,Database,Database
+300,Database,Database:Database
+25,Database,Database:Distributed
+25,Database,Database:BigData
+25,Database,Database:FileIO
+25,Database,Database:GUI
+#
+300,BigData,BigData
+300,BigData,BigData:BigData
+25,BigData,BigData:Distributed
+25,BigData,BigData:GUI
+#
+300,Distributed,Distributed
+300,Distributed,Distributed:Distributed
+#
+300,GUI,GUI
+300,GUI,GUI:GUI
+#
+300,CLI,CLI
+500,CLI,CLI:CLI
+10,CLI,CLI:FileIO
+8,CLI,CLI:Distributed
+3,CLI,CLI:Database
+#
+300,Security,Security
+300,Security,Security:Security
+25,Security,Security:FileIO
+25,Security,Security:GUI
+25,Security,Security:Android
+#
+300,Android,Android
+300,Android,Android:Android
+#
+300,Bytecode,Bytecode
+300,Bytecode,Bytecode:Bytecode
+25,Bytecode,Bytecode:FileIO
+25,Bytecode,Bytecode:GUI
+25,Bytecode,Bytecode:Distributed
+25,Bytecode,Bytecode:Database
+25,Bytecode,Bytecode:Networking
+#
+300,NativeInterop,NativeInterop
+400,NativeInterop,NativeInterop:NativeInterop
+5,NativeInterop,NativeInterop:GUI
+5,NativeInterop,NativeInterop:FileIO
+5,NativeInterop,NativeInterop:Distributed
+5,NativeInterop,NativeInterop:Database
+5,NativeInterop,NativeInterop:Networking
+5,NativeInterop,NativeInterop:BigData
+#
+300,Suspicious,Suspicious
+300,Suspicious,Suspicious:Suspicious
+90,Suspicious,Suspicious:CLI
+60,Suspicious,Suspicious:GUI
+50,Suspicious,Suspicious:FileIO
+15,Suspicious,Suspicious:Distributed
+15,Suspicious,Suspicious:BigData
+15,Suspicious,Suspicious:Database
+15,Suspicious,Suspicious:Networking
+15,Suspicious,Suspicious:Android

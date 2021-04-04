@@ -43,7 +43,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	private Controller controller;
 
 	@Conf(value = NAME_PATTERN, noTranslate = true)
-	public NamingPattern namingPattern = NamingPattern.INTELLIGENT;
+	public NamingPattern namingPattern = NamingPattern.SIMPLE;
 
 	@Conf(value = NAME_SCOPE, noTranslate = true)
 	public NamingScope namingScope = NamingScope.ALL;
