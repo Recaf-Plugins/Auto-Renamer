@@ -32,7 +32,20 @@
 		    <groupId>com.github.Col-E</groupId>
 		    <artifactId>Recaf</artifactId>
 		    <version>2.18.3</version>
-			<scope>compile</scope> <!-- Do not bundle into fatJar -->
+			<scope>provided</scope> <!-- Do not bundle into fatJar -->
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.tribuo/tribuo-classification-mnnaivebayes -->
+		<dependency>
+			<groupId>org.tribuo</groupId>
+			<artifactId>tribuo-classification-mnnaivebayes</artifactId>
+			<version>4.0.2</version>
+			<!-- Why do you depend on groovy oh my god the file bloat is real -->
+			<exclusions>
+				<exclusion>
+					<groupId>org.jline</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	<build>
@@ -43,6 +56,23 @@
 				<configuration>
 					<source>1.8</source>
 					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
 				</configuration>
 			</plugin>
 		</plugins>

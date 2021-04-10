@@ -1,7 +1,7 @@
 package me.coley.recaf.plugin.rename.namegen;
 
 import me.coley.recaf.control.Controller;
-import me.coley.recaf.plugin.rename.analysis.BayesDriver;
+import me.coley.recaf.plugin.rename.analysis.BayesWrapper;
 import me.coley.recaf.util.AccessFlag;
 import me.coley.recaf.util.ClassUtil;
 import me.coley.recaf.util.Log;
@@ -17,25 +17,28 @@ import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.VarInsnNode;
 
-import java.io.IOException;
-
 /**
  * A naming strategy that yields an intelligent pattern of renaming classes and their members.
  *
  * @author Matt Coley
  */
 public class IntelligentStrategy extends AbstractNameStrategy {
-	private final BayesDriver bayesDriver = new BayesDriver();
+	private double classificationThreshold;
 
-	protected IntelligentStrategy(Controller controller) {
+	protected IntelligentStrategy(Controller controller, double classificationThreshold) {
 		super(controller);
+		this.classificationThreshold = classificationThreshold;
+		setupBayes();
+	}
+
+	private void setupBayes() {
 		try {
-			bayesDriver.setup();
-			bayesDriver.populate(controller.getWorkspace());
-		} catch (IOException ex) {
-			Log.error(ex, "Failed to setup intelligent class backend");
+			BayesWrapper.init();
+		} catch (Exception ex) {
+			Log.error(ex, "Failed to initialize naive bayes model!");
 		}
 	}
+
 
 	@Override
 	public String className(ClassNode node) {
@@ -77,8 +80,10 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 		String middle = baseName == null ? "Obj" : baseName.substring(baseName.lastIndexOf('/') + 1);
 		String mapped = prefix + middle + suffix;
 		// Skip if output is redundant
-		if (node.name.endsWith(mapped))
+		if (node.name.endsWith(mapped)) {
+			Log.warn("Skip redundant mapping: {} ---> {}", node.name, mapped);
 			return null;
+		}
 		// Add mapping
 		return addClassMapping(node.name, mapped);
 	}
@@ -153,7 +158,8 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 	 * @return Name for class based on usage.
 	 */
 	private String analyzePurpose(ClassNode node) {
-		return bayesDriver.getClassToTag().getOrDefault(node.name, "Obj");
+		return BayesWrapper.getPredictedClassification(classificationThreshold,
+				BayesWrapper.createClassDataExample(node)).toString();
 	}
 
 	/**

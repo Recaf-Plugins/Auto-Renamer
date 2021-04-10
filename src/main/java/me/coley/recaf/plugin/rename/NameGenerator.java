@@ -31,7 +31,7 @@ public class NameGenerator {
 	 */
 	public NameGenerator(Controller controller, AutoRename plugin, String packageOverride) {
 		this.scopeFilter = plugin.namingScope.createFilter(plugin);
-		this.namingStrategy = plugin.namingPattern.createStrategy(controller);
+		this.namingStrategy = plugin.namingPattern.createStrategy(controller, plugin);
 		this.packageOverride = packageOverride;
 	}
 

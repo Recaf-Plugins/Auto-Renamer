@@ -184,6 +184,7 @@ public class Processor {
 		}
 		mapper.setMappings(sortedMappings);
 		mapper.accept(controller.getWorkspace().getPrimary());
+		Log.info("Done auto-mapping! Applied {} mappings", sortedMappings.size());
 	}
 
 	/**

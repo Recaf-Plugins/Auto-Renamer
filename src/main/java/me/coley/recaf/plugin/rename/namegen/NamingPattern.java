@@ -1,6 +1,7 @@
 package me.coley.recaf.plugin.rename.namegen;
 
 import me.coley.recaf.control.Controller;
+import me.coley.recaf.plugin.rename.AutoRename;
 import me.coley.recaf.util.StringUtil;
 
 /**
@@ -30,13 +31,15 @@ public enum NamingPattern {
 	/**
 	 * @param controller
 	 * 		The controller to pull classes from.
+	 * @param plugin Plugin instance to pull config from.
 	 *
 	 * @return A naming strategy to create appropriate names for items.
 	 */
-	public NameStrategy createStrategy(Controller controller) {
+	public NameStrategy createStrategy(Controller controller, AutoRename plugin) {
 		switch (this) {
 			case INTELLIGENT:
-				return new IntelligentStrategy(controller);
+				double classificationThreshold = plugin.intelligentGuessThreshold / 100.0;
+				return new IntelligentStrategy(controller, classificationThreshold);
 			case SOURCE_FILE:
 				return new SourceFileStrategy(controller);
 			case SIMPLE:

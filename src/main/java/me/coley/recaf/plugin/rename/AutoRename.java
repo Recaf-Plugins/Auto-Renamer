@@ -40,6 +40,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	private static final String NAME_SCOPE = "Naming scope";
 	private static final String SHORT_CUTOFF = "Short name cutoff";
 	private static final String PRUNE_DEBUG = "Remove debug info";
+	private static final String INTELLI_THRESH = "Intelligent guess (%) threshold";
 	private Controller controller;
 
 	@Conf(value = NAME_PATTERN, noTranslate = true)
@@ -50,6 +51,9 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 
 	@Conf(value = SHORT_CUTOFF, noTranslate = true)
 	public long cutoffNameLen = 4;
+
+	@Conf(value = INTELLI_THRESH, noTranslate = true)
+	public long intelligentGuessThreshold = 30;
 
 	@Conf(value = KEEP_P_STRUCT, noTranslate = true)
 	public boolean keepPackageLayout = true;
@@ -78,6 +82,7 @@ public class AutoRename implements StartupPlugin, ContextMenuInjectorPlugin, Con
 	@Override
 	public void addFieldEditors(Map<String, Function<FieldWrapper, Node>> editors) {
 		editors.put(SHORT_CUTOFF, field -> new NumberSlider<Integer>((GuiController) controller, field, 1, 30, 1));
+		editors.put(INTELLI_THRESH, field -> new NumberSlider<Integer>((GuiController) controller, field, 10, 100, 5));
 	}
 
 	@Override

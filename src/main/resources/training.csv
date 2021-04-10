@@ -1,0 +1,10 @@
+nUI,nIO,nNet,nSec,nByte,nNative,nDb,nDist,type
+100,20,15,5,10,10,15,15,UI
+15,100,30,9,15,15,15,9,IO
+10,20,100,20,5,5,10,10,Networking
+8,9,20,60,3,9,6,6,Security
+10,12,5,2,60,5,1,1,Bytecode
+5,9,4,2,2,50,2,2,Native
+5,15,10,5,2,4,50,10,Database
+5,9,15,2,2,5,10,50,Distributed
+35,15,10,9,8,8,8,10,Misc
