@@ -2,6 +2,8 @@
 
 This plugin allows automatic renaming of classes, packages, and the entire open project at a time. It has options for filtering out what classes get named, and how to name them. By default everything will be generically named. 
 
+![demo](demo.gif)
+
 ## Download: [Here](https://github.com/Recaf-Plugins/Auto-Renamer/releases)
 
 ## Config
