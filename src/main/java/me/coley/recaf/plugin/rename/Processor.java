@@ -11,15 +11,11 @@ import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -85,7 +81,9 @@ public class Processor {
 	}
 
 	/**
-	 * @param matchedNames Names of classes to collect.
+	 * @param matchedNames
+	 * 		Names of classes to collect.
+	 *
 	 * @return Set of nodes from the given names.
 	 */
 	private Set<ClassNode> collectNodes(Set<String> matchedNames) {
@@ -108,65 +106,83 @@ public class Processor {
 
 	/**
 	 * Generate mapping for class.
-	 * @param node Class to rename.
+	 *
+	 * @param node
+	 * 		Class to rename.
 	 */
 	private void analyzeClass(ClassNode node) {
-		// Skip special cases: 'module-info'/'package-info'
-		if (node.name.matches("(?:[\\w\\/]+\\/)?(?:module|package)-info")) {
-			return;
-		}
-		// Class name
-		String oldClassName = node.name;
-		String newClassName = generator.createClassName(node);
-		if (newClassName != null) {
-			mappings.put(oldClassName, newClassName);
+		try {
+			// Skip special cases: 'module-info'/'package-info'
+			if (node.name.matches("(?:[\\w\\/]+\\/)?(?:module|package)-info")) {
+				return;
+			}
+			// Class name
+			String oldClassName = node.name;
+			String newClassName = generator.createClassName(node);
+			if (newClassName != null) {
+				mappings.put(oldClassName, newClassName);
+			}
+		} catch (Throwable t) {
+			Log.error(t, "Error occurred in Processor#analyzeClass");
 		}
 	}
 
 	/**
 	 * Generate mappings for field names.
-	 * @param node Class with fields to rename.
+	 *
+	 * @param node
+	 * 		Class with fields to rename.
 	 */
 	private void analyzeFields(ClassNode node) {
-		// Class name
-		String oldClassName = node.name;
-		// Field names
-		for (FieldNode field : node.fields) {
-			String oldFieldName = field.name;
-			String newFieldName = generator.createFieldName(node, field);
-			if (newFieldName != null) {
-				mappings.put(oldClassName + "." + oldFieldName + " " + field.desc, newFieldName);
+		try {
+			// Class name
+			String oldClassName = node.name;
+			// Field names
+			for (FieldNode field : node.fields) {
+				String oldFieldName = field.name;
+				String newFieldName = generator.createFieldName(node, field);
+				if (newFieldName != null) {
+					mappings.put(oldClassName + "." + oldFieldName + " " + field.desc, newFieldName);
+				}
 			}
+		} catch (Throwable t) {
+			Log.error(t, "Error occurred in Processor#analyzeFields");
 		}
 	}
 
 	/**
 	 * Generate mappings for method names.
-	 * @param node Class with methods to rename.
+	 *
+	 * @param node
+	 * 		Class with methods to rename.
 	 */
 	private void analyzeMethods(ClassNode node) {
-		// Class name
-		String oldClassName = node.name;
-		// Method names
-		for (MethodNode method : node.methods) {
-			// Skip constructor/static-block
-			if (method.name.charAt(0) == '<')
-				continue;
-			String oldMethodName = method.name;
-			String newMethodName = generator.createMethodName(node, method);
-			if (newMethodName != null) {
-				mappings.put(oldClassName + "." + oldMethodName + method.desc, newMethodName);
-			}
-			// Method variable names
-			if (!plugin.pruneDebugInfo) {
-				for (LocalVariableNode local : method.localVariables) {
-					String newLocalName = generator.createVariableName(method, local);
-					// Locals do not get globally mapped, so we handle renaming them locally here
-					if (newLocalName != null) {
-						local.name = newLocalName;
+		try {
+			// Class name
+			String oldClassName = node.name;
+			// Method names
+			for (MethodNode method : node.methods) {
+				// Skip constructor/static-block
+				if (method.name.charAt(0) == '<')
+					continue;
+				String oldMethodName = method.name;
+				String newMethodName = generator.createMethodName(node, method);
+				if (newMethodName != null) {
+					mappings.put(oldClassName + "." + oldMethodName + method.desc, newMethodName);
+				}
+				// Method variable names
+				if (!plugin.pruneDebugInfo && method.localVariables != null) {
+					for (LocalVariableNode local : method.localVariables) {
+						String newLocalName = generator.createVariableName(method, local);
+						// Locals do not get globally mapped, so we handle renaming them locally here
+						if (newLocalName != null) {
+							local.name = newLocalName;
+						}
 					}
 				}
 			}
+		} catch (Throwable t) {
+			Log.error(t, "Error occurred in Processor#analyzeMethods");
 		}
 	}
 
@@ -191,8 +207,10 @@ public class Processor {
 	 * Run a task that utilizes {@link ExecutorService} for parallel execution.
 	 * Pooled
 	 *
-	 * @param phaseName Task name.
-	 * @param task Task to run.
+	 * @param phaseName
+	 * 		Task name.
+	 * @param task
+	 * 		Task to run.
 	 */
 	private void pooled(String phaseName, Consumer<ExecutorService> task) {
 		try {

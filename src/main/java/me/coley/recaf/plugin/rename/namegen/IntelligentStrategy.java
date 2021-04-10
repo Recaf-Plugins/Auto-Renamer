@@ -47,8 +47,9 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 			return addClassMapping(node.name, getCurrentClassName(node.name));
 		// Check for parent name
 		String baseName = getParentName(node);
+		String purposeName = null;
 		if (baseName == null) {
-			baseName = analyzePurpose(node);
+			purposeName = analyzePurpose(node);
 		}
 		// Ensure the parent name matches current mappings
 		baseName = matchCurrentMappings(baseName);
@@ -75,6 +76,8 @@ public class IntelligentStrategy extends AbstractNameStrategy {
 			if (!AccessFlag.isAbstract(node.access) && baseName.contains("Abstract")) {
 				baseName = baseName.replace("Abstract", "");
 			}
+		} else {
+			baseName = purposeName;
 		}
 		// Complete the name
 		String middle = baseName == null ? "Obj" : baseName.substring(baseName.lastIndexOf('/') + 1);

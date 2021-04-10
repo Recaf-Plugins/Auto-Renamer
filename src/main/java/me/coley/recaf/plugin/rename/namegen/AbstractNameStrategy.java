@@ -182,7 +182,7 @@ public abstract class AbstractNameStrategy implements NameStrategy {
 		// Warn about dupes
 		if (dupe && !warnedDupeNames.contains(name)) {
 			Log.warn("Automatically mapped class '{}' -> '{}' " +
-					"but the generated name already used! Using '{}'", key, name, uniqueName);
+					"but the generated name is already used! Using '{}'", key, name, uniqueName);
 			warnedDupeNames.add(name);
 		}
 		return uniqueName;

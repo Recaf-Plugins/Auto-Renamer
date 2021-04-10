@@ -128,13 +128,14 @@ public class ClassDataCollector extends ClassVisitor {
 	 * @return Build the example from the label/label-counts.
 	 */
 	public Example<Label> build() {
-
 		return new ArrayExample<>(null, LABELS, normalize(counts));
 	}
 
 	public static double[] normalize(double[] in) {
 		int len = in.length;
 		double total = Arrays.stream(in).sum();
+		if (total == 0)
+			return in;
 		double[] normalized = new double[len];
 		for (int i = 0; i < len; i++) {
 			normalized[i] = in[i] / total;
